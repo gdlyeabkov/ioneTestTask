@@ -1,12 +1,12 @@
 <template>
   <div>
-    <span @click="toggleBurgerMenu = !toggleBurgerMenu" style="cursor: pointer; color: white; z-index: 2; position: fixed; top: 0px; left: 0px;" class="material-icons p-2 bg-blue-200 rounded">
+    <span @click="toggleBurgerMenu = !toggleBurgerMenu" class="material-icons p-2 bg-blue-200 rounded cursor-pointer fixed top-0 left-0 z-10 text-white">
       menu
     </span>
-    <TodosList/>
-    <div :style="{ display: !toggleBurgerMenu ? 'none' : 'block' }">
-      <table class="table-fixed text-white border-solid border-2 border-gray-400" style="position: fixed; top: 0px; left: 0px;">
-        <div v-for="(user, userIndex) in users" :key="user.id">
+    <TodosList :todos="todos" />
+    <div :class="{ 'hidden': !toggleBurgerMenu, 'block': toggleBurgerMenu }">
+      <table class="table-fixed text-white border-solid border-2 border-gray-400 fixed top-0 left-0">
+        <div v-for="(user, userIndex) in propsUsers" :key="user.id">
           <tr class="bg-gray-700 border-solid border-2 border-gray-400">
             <td width="750px">
               <span>{{ user.username }}</span>
@@ -26,28 +26,48 @@ import TodosList from './TodosList.vue'
 export default {
   name: 'FilterMenu',
   props: [
-    'todos',
-    'users'
+    'propsTodos',
+    'propsUsers'
   ],
   data () {
     return {
-      toggleBurgerMenu: false
+      toggleBurgerMenu: false,
+      todos: this.propsTodos,
+      counterOfFiltered: 0,
+      checkboxes: [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ]
     }
   },
   methods: {
     filterTodos (event, userId, userIndex) {
       this.$store.commit('incrementCounter')
-      // this.counterOfFiltered++
+      this.counterOfFiltered++
       if (this.$store.state.counterOfFiltered === 1) {
-        this.$store.commit('setStartTodos', this.todos)
-        // this.startTodos = this.todos
+        this.$store.commit('setStartTodos', this.propsTodos)
       }
-      // this.todos = this.startTodos
+      this.todos = this.propsTodos
       this.$store.commit('setTodos', this.$store.state.startTodos)
-      // this.$store.checkboxes[userIndex] = event.target.checked
+      this.checkboxes[userIndex] = event.target.checked
       this.$store.commit('setCheckboxes', { userIndex, event })
-      // this.todos = this.todos.filter((todo) => {
-      this.$store.commit('setTodos', this.todos.filter((todo) => {
+      this.todos = this.propsTodos.filter((todo) => {
+        if ((this.checkboxes[userIndex] && todo.userId === userId) || this.checkboxes[todo.userId - 1]) {
+          return true
+        } else if (!this.checkboxes[userIndex]) {
+          return false
+        }
+        return false
+      })
+      this.$store.commit('setTodos', this.propsTodos.filter((todo) => {
         if ((this.$store.state.checkboxes[userIndex] && todo.userId === userId) || this.$store.state.checkboxes[todo.userId - 1]) {
           return true
         } else if (!this.$store.state.checkboxes[userIndex]) {
